@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoMap Pro</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Custom CSS -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+            background: #000000;
+            color: #f5f5f7;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+        }
+
+        .header {
+            background: rgba(29, 29, 31, 0.72);
+            backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #f5f5f7;
+            letter-spacing: -0.022em;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 980px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #f5f5f7;
+            font-size: 0.875rem;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.02);
+        }
+
+        .btn-primary {
+            background: #0071e3;
+            color: #ffffff;
+            border-color: #0071e3;
+        }
+
+        .btn-primary:hover {
+            background: #0077ed;
+            border-color: #0077ed;
+            box-shadow: 0 4px 20px rgba(0, 113, 227, 0.4);
+        }
+
+        .btn-secondary {
+            background: #ff3b30;
+            color: #ffffff;
+            border-color: #ff3b30;
+        }
+
+        .btn-secondary:hover {
+            background: #ff453a;
+            border-color: #ff453a;
+            box-shadow: 0 4px 20px rgba(255, 59, 48, 0.4);
+        }
+
+        .btn.active {
+            background: #0071e3;
+            color: #ffffff;
+            border-color: #0071e3;
+            box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .hero-section {
+            padding: 6rem 0 4rem;
+            text-align: center;
+        }
+
+        .hero-title {
+            font-size: clamp(3rem, 8vw, 5rem);
+            font-weight: 700;
+            color: #f5f5f7;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.035em;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #f5f5f7 0%, #86868b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: #a1a1a6;
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.4;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 18px;
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .feature-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-4px);
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #f5f5f7;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-description {
+            color: #a1a1a6;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .map-section {
+            margin: 4rem 0;
+        }
+
+        .map-container {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 18px;
+            overflow: hidden;
+            position: relative;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .map-header {
+            padding: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .map-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #f5f5f7;
+        }
+
+        .map-controls {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+
+        .leaflet-container {
+            background: #1a1a1a !important;
+        }
+
+        .map-overlay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .status-card {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #f5f5f7;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .status-active {
+            background: rgba(0, 113, 227, 0.2);
+            border-color: rgba(0, 113, 227, 0.4);
+            color: #64d2ff;
+        }
+
+        .status-counter {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .instructions-section {
+            margin: 4rem 0;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 18px;
+            padding: 3rem;
+            backdrop-filter: blur(20px);
+        }
+
+        .instructions h3 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #f5f5f7;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .instruction-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .instruction-item {
+            text-align: center;
+        }
+
+        .instruction-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .instruction-text {
+            color: #a1a1a6;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .footer {
+            padding: 4rem 0;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 6rem;
+        }
+
+        .footer-text {
+            color: #86868b;
+            font-size: 0.875rem;
+        }
+
+        /* Custom Leaflet styling */
+        .leaflet-popup-content-wrapper {
+            background: rgba(0, 0, 0, 0.9) !important;
+            color: #f5f5f7 !important;
+            border-radius: 12px !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+            backdrop-filter: blur(20px) !important;
+        }
+
+        .leaflet-popup-tip {
+            background: rgba(0, 0, 0, 0.9) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .leaflet-control-zoom a {
+            background: rgba(0, 0, 0, 0.8) !important;
+            color: #f5f5f7 !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .leaflet-control-zoom a:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 4rem 0 3rem;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .map-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .map-controls {
+                justify-content: center;
+            }
+            
+            .container {
+                padding: 0 1rem;
+            }
+            
+            #map {
+                height: 400px;
+            }
+            
+            .map-overlay {
+                position: relative;
+                top: 0;
+                right: 0;
+                flex-direction: row;
+                flex-wrap: wrap;
+                padding: 1rem;
+                background: rgba(0, 0, 0, 0.5);
+            }
+
+            .instruction-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">GeoMap</div>
+            <nav class="controls">
+                <button id="addModeBtn" class="btn btn-primary">Add Points</button>
+                <button id="deleteModeBtn" class="btn btn-secondary">Remove Points</button>
+                <button id="clearAllBtn" class="btn">Clear All</button>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <section class="hero-section">
+            <h1 class="hero-title">Created using leaflet</h1>
+            <p class="hero-subtitle">
+                Using leaflet to create a map that allows users to recieve coustom places to visit based on markers location in proximity to the user
+            </p>
+        </section>
+
+        <section class="feature-grid">
+            <div class="feature-card">
+                <h3 class="feature-title">Creating a Marker</h3>
+                <p class="feature-description">
+                    Click anywhere on the map to add precise location markers with automatic coordinate tracking.
+                </p>
+            </div>
+            <div class="feature-card">
+                <h3 class="feature-title">Managing a Marker</h3>
+                <p class="feature-description">
+                    Easily remove unwanted points or clear your entire dataset with simple one-click actions.
+                </p>
+            </div>
+        </section>
+
+        <section class="map-section">
+            <div class="map-container">
+                <div class="map-header">
+                    <h2 class="map-title">Interactive Map</h2>
+                    <div class="map-controls">
+                        <div id="statusIndicator" class="status-card">Ready to use</div>
+                        <div id="markerCount" class="status-card status-counter">
+                            Points: <span id="count">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="map"></div>
+            </div>
+        </section>
+
+        <section class="instructions-section">
+            <div class="instructions">
+                <h3>How to use GeoMap</h3>
+                <div class="instruction-grid">
+                    <div class="instruction-item">
+                        <span class="instruction-icon">📍</span>
+                        <p class="instruction-text">
+                            Click "Add Points" and then click anywhere on the map to place new location markers
+                        </p>
+                    </div>
+                    <div class="instruction-item">
+                        <span class="instruction-icon">🗑️</span>
+                        <p class="instruction-text">
+                            Select "Remove Points" and click on existing markers to delete them from your map
+                        </p>
+                    </div>
+                    <div class="instruction-item">
+                        <span class="instruction-icon">🧹</span>
+                        <p class="instruction-text">
+                            Use "Clear All" to instantly remove all markers and start fresh with a clean map
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-text">© 2024 GeoMap</p>
+        </div>
+    </footer>
+
+    <!-- Django data as JSON -->
+    <script id="django-data" type="application/json">
+        {
+            "markers": {{ markers|safe }},
+            "markerCount": {{ markers|length }}
+        }
+    </script>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- CSRF Token for Django -->
+    <script>
+        function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+    </script>
+
+    <!-- Map JavaScript -->
+    <script>
+        // Get Django data
+        const djangoData = JSON.parse(document.getElementById('django-data').textContent);
+        
+        // Initialize map with dark tiles
+        const map = L.map('map').setView([37.7749, -122.4194], 10); // San Francisco default
+        
+        // Add dark tile layer
+        L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; Stadia Maps, OpenStreetMap contributors',
+            maxZoom: 20,
+        }).addTo(map);
+
+        // Variables
+        let addMode = false;
+        let deleteMode = false;
+        let markerCount = djangoData.markerCount;
+
+        // UI elements
+        const addModeBtn = document.getElementById('addModeBtn');
+        const deleteModeBtn = document.getElementById('deleteModeBtn');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const countElement = document.getElementById('count');
+
+        // Update UI
+        function updateUI() {
+            countElement.textContent = markerCount;
+            
+            if (addMode) {
+                statusIndicator.textContent = 'Click on the map to add points';
+                statusIndicator.className = 'status-card status-active';
+                addModeBtn.classList.add('active');
+                deleteModeBtn.classList.remove('active');
+            } else if (deleteMode) {
+                statusIndicator.textContent = 'Click on points to remove them';
+                statusIndicator.className = 'status-card status-active';
+                deleteModeBtn.classList.add('active');
+                addModeBtn.classList.remove('active');
+            } else {
+                statusIndicator.textContent = 'Ready to use';
+                statusIndicator.className = 'status-card';
+                addModeBtn.classList.remove('active');
+                deleteModeBtn.classList.remove('active');
+            }
+        }
+
+        // Load existing markers
+        const existingMarkers = djangoData.markers;
+        const markerLayer = L.layerGroup().addTo(map);
+
+        existingMarkers.forEach(markerData => {
+            const marker = L.marker([markerData.latitude, markerData.longitude])
+                .bindPopup(`<b>Location Point</b><br>Coordinates: ${markerData.latitude.toFixed(4)}, ${markerData.longitude.toFixed(4)}`);
+            
+            marker.markerId = markerData.id;
+            
+            marker.on('click', function(e) {
+                if (deleteMode) {
+                    e.originalEvent.stopPropagation();
+                    deleteMarker(marker);
+                }
+            });
+            
+            markerLayer.addLayer(marker);
+        });
+
+        // Button event listeners
+        addModeBtn.addEventListener('click', () => {
+            addMode = !addMode;
+            deleteMode = false;
+            updateUI();
+        });
+
+        deleteModeBtn.addEventListener('click', () => {
+            deleteMode = !deleteMode;
+            addMode = false;
+            updateUI();
+        });
+
+        clearAllBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to remove all points from the map?')) {
+                clearAllMarkers();
+            }
+        });
+
+        // Map click event
+        map.on('click', function(e) {
+            if (addMode) {
+                addMarker(e.latlng.lat, e.latlng.lng);
+            }
+        });
+
+        // Add marker function
+        async function addMarker(lat, lng) {
+            try {
+                const response = await fetch('{% url "add_marker" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body: JSON.stringify({
+                        latitude: lat,
+                        longitude: lng
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const marker = L.marker([lat, lng])
+                        .bindPopup(`<b>Location Point</b><br>Coordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+                    
+                    marker.markerId = data.id;
+                    
+                    marker.on('click', function(e) {
+                        if (deleteMode) {
+                            e.originalEvent.stopPropagation();
+                            deleteMarker(marker);
+                        }
+                    });
+                    
+                    markerLayer.addLayer(marker);
+                    markerCount++;
+                    updateUI();
+                }
+            } catch (error) {
+                console.error('Error adding point:', error);
+            }
+        }
+
+        // Delete marker function
+        async function deleteMarker(marker) {
+            try {
+                const response = await fetch(`{% url "delete_marker" 0 %}`.replace('0', marker.markerId), {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                    }
+                });
+
+                if (response.ok) {
+                    markerLayer.removeLayer(marker);
+                    markerCount--;
+                    updateUI();
+                }
+            } catch (error) {
+                console.error('Error removing point:', error);
+            }
+        }
+
+        // Clear all markers function
+        async function clearAllMarkers() {
+            try {
+                const response = await fetch('{% url "clear_markers" %}', {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                    }
+                });
+
+                if (response.ok) {
+                    markerLayer.clearLayers();
+                    markerCount = 0;
+                    updateUI();
+                }
+            } catch (error) {
+                console.error('Error clearing all points:', error);
+            }
+        }
+
+        // Initialize UI
+        updateUI();
+    </script>
+</body>
+</html>
+
