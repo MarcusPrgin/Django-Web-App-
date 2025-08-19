@@ -1,0 +1,15 @@
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore SQLite database
+db.sqlite3
+
+# Ignore Python cache
+__pycache__
+*.pyc
+
+# Ignore SQLite database and txt dumps
+*.sqlite3
+*.db
+*.sqlite
