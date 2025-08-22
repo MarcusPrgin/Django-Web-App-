@@ -2,6 +2,16 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
 
+class Marker(models.Model):
+    latitude = models.DecimalField(max_digits=10, decimal_places=7)
+    longitude = models.DecimalField(max_digits=10, decimal_places=7)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Marker at ({self.latitude}, {self.longitude})"
+    
+    class Meta:
+        ordering = ['-created_at']
 class UserLocation(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6)

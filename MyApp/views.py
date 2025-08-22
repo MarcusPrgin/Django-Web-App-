@@ -15,40 +15,166 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Marker
 import json
 
+from django.shortcuts import render
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+import json
+from .models import Marker
+
+
+from django.shortcuts import render
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+import json
+from .models import Marker
+
 def map_view(request):
-    markers = Marker.objects.all().values('id', 'latitude', 'longitude')
-    return render(request, 'map.html', {
-        'markers': list(markers),
-    })
+    """Display the map with existing markers"""
+    markers = Marker.objects.all()
+    markers_data = []
+    
+    for marker in markers:
+        markers_data.append({
+            'id': marker.id,
+            'title': marker.title,
+            'description': marker.description or '',
+            'latitude': float(marker.latitude),
+            'longitude': float(marker.longitude),
+        })
+    
+    context = {
+        'markers': markers_data,
+    }
+    return render(request, 'map.html', context)
 
 @csrf_exempt
+@require_http_methods(["POST"])
 def add_marker(request):
-    if request.method == "POST":
+    """Add a new marker to the database"""
+    try:
         data = json.loads(request.body)
-        lat = data.get("latitude")
-        lng = data.get("longitude")
-        marker = Marker.objects.create(latitude=lat, longitude=lng)
-        return JsonResponse({"id": marker.id})
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+        title = data.get('title', 'Location Point')
+        description = data.get('description', '')
+        
+        if latitude is not None and longitude is not None:
+            marker = Marker.objects.create(
+                title=title,
+                description=description,
+                latitude=latitude,
+                longitude=longitude
+            )
+            return JsonResponse({
+                'success': True,
+                'id': marker.id,
+                'title': marker.title,
+                'description': marker.description,
+                'latitude': float(marker.latitude),
+                'longitude': float(marker.longitude)
+            })
+        else:
+            return JsonResponse({'success': False, 'error': 'Missing coordinates'}, status=400)
+    
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
+@require_http_methods(["DELETE"])
 def delete_marker(request, marker_id):
+    """Delete a specific marker"""
     try:
         marker = Marker.objects.get(id=marker_id)
         marker.delete()
-        return JsonResponse({"status": "deleted"})
+        return JsonResponse({'success': True})
     except Marker.DoesNotExist:
-        return JsonResponse({"error": "not found"}, status=404)
+        return JsonResponse({'success': False, 'error': 'Marker not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
+@require_http_methods(["DELETE"])
 def clear_markers(request):
-    if request.method == "DELETE":
+    """Delete all markers"""
+    try:
         Marker.objects.all().delete()
-        return JsonResponse({"status": "cleared"})
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 def map_view(request):
-    return render(request, 'map.html')
+    """Display the map with existing markers"""
+    markers = Marker.objects.all()
+    markers_data = []
+    
+    for marker in markers:
+        markers_data.append({
+            'id': marker.id,
+            'latitude': float(marker.latitude),
+            'longitude': float(marker.longitude),
+        })
+    
+    context = {
+        'markers': markers_data,
+    }
+    return render(request, 'map.html', context)
 
+@csrf_exempt
+@require_http_methods(["POST"])
+def add_marker(request):
+    """Add a new marker to the database"""
+    try:
+        data = json.loads(request.body)
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+        
+        if latitude is not None and longitude is not None:
+            marker = Marker.objects.create(
+                latitude=latitude,
+                longitude=longitude
+            )
+            return JsonResponse({
+                'success': True,
+                'id': marker.id,
+                'latitude': float(marker.latitude),
+                'longitude': float(marker.longitude)
+            })
+        else:
+            return JsonResponse({'success': False, 'error': 'Missing coordinates'}, status=400)
+    
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+@require_http_methods(["DELETE"])
+def delete_marker(request, marker_id):
+    """Delete a specific marker"""
+    try:
+        marker = Marker.objects.get(id=marker_id)
+        marker.delete()
+        return JsonResponse({'success': True})
+    except Marker.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Marker not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+@require_http_methods(["DELETE"])
+def clear_markers(request):
+    """Delete all markers"""
+    try:
+        Marker.objects.all().delete()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
 
 def home(request):
     return render(request, "home.html")

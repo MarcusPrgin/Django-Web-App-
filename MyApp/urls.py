@@ -10,7 +10,8 @@ urlpatterns = [
     path("tasks/delete/<int:task_id>/", views.delete_task, name="delete_task"),
     path("tasks/snooze/<int:task_id>/", views.snooze_task, name="snooze_task"),
     path('map/', views.map_view, name='map'),
-    path('api/add_marker/', views.add_marker, name='add_marker'),
-    path('api/delete_marker/<int:marker_id>/', views.delete_marker, name='delete_marker'),
-    path('api/clear_markers/', views.clear_markers, name='clear_markers'),
+    path('add_marker/', views.add_marker, name='add_marker'),
+    path('delete_marker/<int:marker_id>/', views.delete_marker, name='delete_marker'),
+    path('clear_markers/', views.clear_markers, name='clear_markers'),
+    
 ]
